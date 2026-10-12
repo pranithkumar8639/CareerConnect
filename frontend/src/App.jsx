@@ -1,7 +1,11 @@
 import { useState } from "react";
 import StudentProfile from "./StudentProfile";
 import "./App.css";
-import { getJobs, applyForJob } from "./api";
+import {
+  getJobs,
+  applyForJob,
+  getMyApplications,
+} from "./api";
 
 const API_URL = "http://localhost:8080/api/auth";
 
@@ -19,6 +23,9 @@ function App() {
 const [jobsLoading, setJobsLoading] = useState(false);
 const [jobsError, setJobsError] = useState("");
 const [appliedJobs, setAppliedJobs] = useState([]);
+const [myApplications, setMyApplications] = useState([]);
+const [applicationsLoading, setApplicationsLoading] = useState(false);
+const [applicationsError, setApplicationsError] = useState("");
   const [user, setUser] = useState(() => {
     try {
       const saved = localStorage.getItem("careerconnect_user");
@@ -47,6 +54,23 @@ const [appliedJobs, setAppliedJobs] = useState([]);
     setJobsError(err.message || "Unable to load jobs.");
   } finally {
     setJobsLoading(false);
+  }
+}
+async function loadMyApplications() {
+  setPage("my-applications");
+  setApplicationsLoading(true);
+  setApplicationsError("");
+  setMessage("");
+
+  try {
+    const data = await getMyApplications();
+    setMyApplications(Array.isArray(data) ? data : []);
+  } catch (err) {
+    setApplicationsError(
+      err.message || "Unable to load your applications."
+    );
+  } finally {
+    setApplicationsLoading(false);
   }
 }
   function openPage(nextPage) {
@@ -258,7 +282,97 @@ const [appliedJobs, setAppliedJobs] = useState([]);
       return <StudentProfile user={user} onBack={() => setPage("dashboard")} />;
     }
   }
+if (page === "my-applications" && user) {
+  return (
+    <main className="dashboard-page">
+      <header className="navbar dashboard-nav">
+        <div className="brand">
+          <span className="brand-icon">C</span>
+          <span>
+            Career<span className="blue">Connect</span>
+          </span>
+        </div>
 
+        <button
+          className="outline-btn"
+          onClick={() => setPage("dashboard")}
+        >
+          Back to dashboard
+        </button>
+      </header>
+
+      <section className="dashboard-content">
+
+<div className="applications-heading">
+  <div>
+    <h1>My Applications</h1>
+    <p>Track the jobs you have applied for.</p>
+  </div>
+
+  <button
+    className="primary-btn"
+    onClick={loadMyApplications}
+    disabled={applicationsLoading}
+  >
+    {applicationsLoading ? "Refreshing..." : "Refresh Applications"}
+  </button>
+</div>
+
+<div className="dashboard-card applications-summary">
+  <h2>{myApplications.length}</h2>
+  <p>Total applications</p>
+</div>
+
+
+        {applicationsLoading && <p>Loading applications...</p>}
+
+        {applicationsError && (
+          <p role="alert">{applicationsError}</p>
+        )}
+
+        {!applicationsLoading &&
+          !applicationsError &&
+          myApplications.length === 0 && (
+            <p>You haven't applied for any jobs yet.</p>
+          )}
+
+        {!applicationsLoading &&
+          !applicationsError &&
+          myApplications.map((application) => (
+            <article
+              className="dashboard-card"
+              key={application.applicationId}
+            >
+              <h2>{application.jobTitle}</h2>
+
+              <p>
+                <strong>Company:</strong> {application.company}
+              </p>
+
+              <p>
+                <strong>Location:</strong> {application.location}
+              </p>
+
+              <p>
+                <strong>Job type:</strong> {application.jobType}
+              </p>
+
+              <p>
+                <strong>Status:</strong> {application.status}
+              </p>
+
+              <p>
+                <strong>Applied on:</strong>{" "}
+                {application.appliedAt
+                  ? new Date(application.appliedAt).toLocaleString()
+                  : "Date unavailable"}
+              </p>
+            </article>
+          ))}
+      </section>
+    </main>
+  );
+}
 if (page === "jobs" && user) {
   return (
     <main className="dashboard-page">
@@ -376,10 +490,17 @@ if (page === "jobs" && user) {
     <h2>Your next opportunity starts here.</h2>
     <p>Explore jobs and prepare your profile for employers.</p>
     <button
+    
   className="primary-btn"
   onClick={loadJobs}
 >
   Explore jobs
+</button>
+<button
+  className="outline-btn"
+  onClick={loadMyApplications}
+>
+  My Applications
 </button>
     {message && <p className="muted">{message}</p>}
   </div>

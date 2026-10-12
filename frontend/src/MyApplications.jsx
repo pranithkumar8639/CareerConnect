@@ -14,15 +14,12 @@ export default function MyApplications() {
     async function loadApplications() {
       try {
         const data = await getMyApplications();
-
         if (!cancelled) {
           setApplications(Array.isArray(data) ? data : []);
         }
       } catch (err) {
         if (!cancelled) {
-          setError(
-            err.message || "Unable to load applications."
-          );
+          setError(err.message || "Could not load applications.");
         }
       } finally {
         if (!cancelled) {
@@ -39,61 +36,44 @@ export default function MyApplications() {
   }, []);
 
   return (
-    <main className="applications-page">
+    <main className="page">
       <h1>My Applications</h1>
       <p>Track the jobs you have applied for.</p>
 
       {loading && <p>Loading your applications...</p>}
 
-      {!loading && error && (
-        <p className="application-error">{error}</p>
-      )}
+      {error && <p role="alert">{error}</p>}
 
       {!loading && !error && applications.length === 0 && (
-        <section className="application-empty">
+        <section className="card">
           <h2>No applications yet</h2>
-          <p>
-            Explore available jobs and apply to get started.
-          </p>
+          <p>Explore available jobs and apply to get started.</p>
         </section>
       )}
 
       {!loading && !error && applications.length > 0 && (
-        <section className="application-list">
-          {applications.map((application) => (
-            <article
-              className="application-card"
-              key={application.applicationId}
-            >
-              <h2>{application.jobTitle}</h2>
-
+        <div className="applications-list">
+          {applications.map((app) => (
+            <article className="card" key={app.applicationId}>
+              <h2>{app.jobTitle}</h2>
+              <p><strong>Company:</strong> {app.company}</p>
+              <p><strong>Location:</strong> {app.location}</p>
+              <p><strong>Job type:</strong> {app.jobType}</p>
               <p>
-                <strong>Company:</strong> {application.company}
+                <strong>Status:</strong>{" "}
+                <span className="application-status">
+                  {app.status}
+                </span>
               </p>
-
-              <p>
-                <strong>Location:</strong> {application.location}
-              </p>
-
-              <p>
-                <strong>Job type:</strong> {application.jobType}
-              </p>
-
               <p>
                 <strong>Applied on:</strong>{" "}
-                {application.appliedAt
-                  ? new Date(
-                      application.appliedAt
-                    ).toLocaleDateString()
+                {app.appliedAt
+                  ? new Date(app.appliedAt).toLocaleString()
                   : "Not available"}
               </p>
-
-              <span className="application-status">
-                {application.status}
-              </span>
             </article>
           ))}
-        </section>
+        </div>
       )}
     </main>
   );

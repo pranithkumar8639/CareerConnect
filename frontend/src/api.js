@@ -87,5 +87,5 @@ export function applyForJob(jobId) {
 
 
 export function getMyApplications() {
-  return request("/applications/me");
+  return request("/jobs/my-applications");
 }
